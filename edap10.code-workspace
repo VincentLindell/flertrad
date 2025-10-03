@@ -1,0 +1,62 @@
+{
+	"folders": [
+		{
+			"path": "cs",
+			"name": "CS"
+		},
+		{
+			"path": "clock",
+			"name": "1. Alarm Clock"
+		},
+		{
+			"path": "widgets",
+			"name": "2. Widgets from Outer Space"
+		},
+		{
+			"path": "lift",
+			"name": "3. Passenger Lift"
+		},
+		{
+			"path": "crack",
+			"name": "4. Cracking the Code"
+		},
+		{
+			"path": "wash",
+			"name": "5. Washing Machine"
+		},
+		{
+			"path": "twits",
+			"name": "6. Jim Hacker & the Twits"
+		},
+	],
+	"settings": {
+		"editor.insertSpaces": true,
+		"java.project.referencedLibraries": [
+			"../cs/labs.jar",
+                ],
+		"terminal.integrated.env.windows": {
+			"PATH": "${env:PATH};C:\\msys64\\usr\\bin;C:\\msys64\\usr\\local\\bin"
+		},
+		"github.copilot.editor.enableAutoCompletions": false,
+		"chat.commandCenter.enabled": false,
+		"workbench.editor.empty.hint": "hidden",
+		"inlineChat.lineNaturalLanguageHint": false,
+		"files.autoSave": "onFocusChange",
+		"files.exclude": {
+			"archive": true,
+			"bin": true,
+			".project": true,
+			".settings": true,
+			".classpath": true
+		}
+	},
+	"extensions": {
+		"recommendations": [
+			"redhat.java",
+			"vscjava.vscode-java-pack",
+			"vscjava.vscode-java-debug",
+			"ms-vscode.cpptools-extension-pack",
+			"ms-vscode.makefile-tools",
+		]
+	},
+}
