@@ -14,11 +14,34 @@ public class FactoryController {
         Tool press = factory.getPressTool();
         Tool paint = factory.getPaintTool();
 
-        while (true) {
-            press.waitFor(Widget.GREEN_BLOB);
-            conveyor.off();
-            press.performAction();
-            conveyor.on();
-        }
+        FactoryMonitor mon = new FactoryMonitor(press, paint, conveyor);
+
+       
+
+        Thread greenBlob = new Thread(() -> {
+            try {
+                while (true) {
+                    press.waitFor(Widget.GREEN_BLOB);
+                    mon.pressWidget();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            
+        });
+        Thread blueMarbel = new Thread(() -> {
+            try {
+                while (true) {
+                    paint.waitFor(Widget.BLUE_MARBLE);
+                    mon.paintWidget();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            
+        });
+        greenBlob.start();
+        blueMarbel.start();
+        
     }
 }
