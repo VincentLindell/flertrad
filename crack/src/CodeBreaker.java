@@ -74,11 +74,11 @@ public class CodeBreaker implements SnifferCallback {
     public void onMessageIntercepted(String message, BigInteger n) {
         
 
-        System.out.println("message intercepted (N=" + n + ")...");
+       
+
         WorklistItem item = new WorklistItem(n, message);
         
-        
-        
+
         SwingUtilities.invokeLater(() -> {
             JButton b = new JButton("Break");
             JButton c = new JButton("Cancel");
@@ -92,10 +92,10 @@ public class CodeBreaker implements SnifferCallback {
 
                 ProgressItem progressItem = new ProgressItem(n, message);
 
-                SwingUtilities.invokeLater(() -> {
-                    progressList.add(progressItem);
-                    mainProgressBar.setMaximum(mainProgressBar.getMaximum() + 1_000_000);
-                });
+                
+                progressList.add(progressItem);
+                mainProgressBar.setMaximum(mainProgressBar.getMaximum() + 1_000_000);
+                
                 
                 
                 progressItem.revalidate();
@@ -106,14 +106,24 @@ public class CodeBreaker implements SnifferCallback {
 
                 r.addActionListener(e3 -> {
                     
-                    
+                    System.out.println("Remove1: Main: " + mainProgressBar.getValue() + " / " + mainProgressBar.getMaximum());
                     SwingUtilities.invokeLater(() -> {
                         progressList.remove(progressItem);
-                        updateMainProgressBar(-1_000_000);
-                        mainProgressBar.setMaximum(mainProgressBar.getMaximum() - 1_000_000);
+                        // Justera värdet proportionellt när vi tar bort en färdig uppgift
+                        int currentValue = mainProgressBar.getValue();
+                        int currentMax = mainProgressBar.getMaximum();
+                        mainProgressBar.setMaximum(currentMax - 1_000_000);
+                        // Justera värdet proportionellt för att behålla samma andel
+                        if (currentMax > 0) {
+                            int newValue = Math.max(0, currentValue - 1_000_000);
+                            mainProgressBar.setValue(newValue);
+                        }
                     });
+
+                    
                     progressList.revalidate();
                     progressList.repaint();
+                    System.out.println("Remove 2: Main: " + mainProgressBar.getValue() + " / " + mainProgressBar.getMaximum());
                 });
 
                 pool.submit(() -> {
@@ -121,7 +131,8 @@ public class CodeBreaker implements SnifferCallback {
                         Factorizer.crack(message, n, new ProgressTracker(){
                             @Override
                             public void onProgress(int ppmDelta) {
-                                System.out.println("Progress update: " + ppmDelta);
+                                //System.out.println("Progress update: " + ppmDelta);
+                                 System.out.println("Main: " + mainProgressBar.getValue() + " / " + mainProgressBar.getMaximum());
                                 JProgressBar bar = progressItem.getProgressBar();
                                 int newValue = Math.min(bar.getValue()+ ppmDelta, bar.getMaximum());
                                 bar.setValue(newValue);
@@ -141,14 +152,13 @@ public class CodeBreaker implements SnifferCallback {
                     }
                 });
             });
-
-            
         });
         
     }
     private void updateMainProgressBar(int delta) {
         SwingUtilities.invokeLater(() -> {
-            int newValue = mainProgressBar.getValue() + delta;
+            
+            int newValue = mainProgressBar.getValue() + delta;   
             mainProgressBar.setValue(Math.min(newValue, mainProgressBar.getMaximum()));
         });
     }
