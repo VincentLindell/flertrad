@@ -1,6 +1,7 @@
 import java.math.BigInteger;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -46,6 +47,7 @@ public class CodeBreaker implements SnifferCallback {
         workList        = w.getWorkList();
         progressList    = w.getProgressList();
         mainProgressBar = w.getProgressBar();
+        w.enableErrorChecks();
     }
     
     // -----------------------------------------------------------------------
@@ -73,13 +75,8 @@ public class CodeBreaker implements SnifferCallback {
     @Override
     public void onMessageIntercepted(String message, BigInteger n) {
         
-
-       
-
-        WorklistItem item = new WorklistItem(n, message);
-        
-
         SwingUtilities.invokeLater(() -> {
+            WorklistItem item = new WorklistItem(n, message);
             JButton b = new JButton("Break");
             JButton c = new JButton("Cancel");
             JButton r = new JButton("Remove");
@@ -107,18 +104,18 @@ public class CodeBreaker implements SnifferCallback {
                 r.addActionListener(e3 -> {
                     
                     System.out.println("Remove1: Main: " + mainProgressBar.getValue() + " / " + mainProgressBar.getMaximum());
-                    SwingUtilities.invokeLater(() -> {
-                        progressList.remove(progressItem);
-                        // Justera värdet proportionellt när vi tar bort en färdig uppgift
-                        int currentValue = mainProgressBar.getValue();
-                        int currentMax = mainProgressBar.getMaximum();
-                        mainProgressBar.setMaximum(currentMax - 1_000_000);
-                        // Justera värdet proportionellt för att behålla samma andel
-                        if (currentMax > 0) {
-                            int newValue = Math.max(0, currentValue - 1_000_000);
-                            mainProgressBar.setValue(newValue);
-                        }
-                    });
+                    
+                    progressList.remove(progressItem);
+                  
+                    int currentValue = mainProgressBar.getValue();
+                    int currentMax = mainProgressBar.getMaximum();
+                    mainProgressBar.setMaximum(currentMax - 1_000_000);
+                   
+                    if (currentMax > 0) {
+                        int newValue = Math.max(0, currentValue - 1_000_000);
+                        mainProgressBar.setValue(newValue);
+                    }
+                    
 
                     
                     progressList.revalidate();
@@ -126,31 +123,67 @@ public class CodeBreaker implements SnifferCallback {
                     System.out.println("Remove 2: Main: " + mainProgressBar.getValue() + " / " + mainProgressBar.getMaximum());
                 });
 
-                pool.submit(() -> {
+                
+
+                Future<?> f = pool.submit(() -> {
+                    JProgressBar bar = progressItem.getProgressBar();
                     try {
-                        Factorizer.crack(message, n, new ProgressTracker(){
+                        String msg = Factorizer.crack(message, n, new ProgressTracker(){
                             @Override
                             public void onProgress(int ppmDelta) {
-                                //System.out.println("Progress update: " + ppmDelta);
-                                 System.out.println("Main: " + mainProgressBar.getValue() + " / " + mainProgressBar.getMaximum());
-                                JProgressBar bar = progressItem.getProgressBar();
-                                int newValue = Math.min(bar.getValue()+ ppmDelta, bar.getMaximum());
-                                bar.setValue(newValue);
-                                if(bar.getValue()<= bar.getMaximum()){
-                                    updateMainProgressBar(ppmDelta);
-                                }
-                               
-                                if(bar.getValue() >= 1_000_000){
-                                    buttonPanel.remove(c);
-                                    buttonPanel.add(r);
-                                    buttonPanel.revalidate();
-                                }
+                                SwingUtilities.invokeLater(() -> {
+                                    
+
+                                    int newValue = Math.min(bar.getValue() + ppmDelta, bar.getMaximum());
+                                    bar.setValue(newValue);
+
+                                    if (bar.getValue() <= bar.getMaximum()) {
+                                        updateMainProgressBar(ppmDelta);
+                                    }
+
+                                    if (bar.getValue() >= 1_000_000) {
+                                        buttonPanel.remove(c);
+                                        buttonPanel.add(r);
+                                        buttonPanel.revalidate();
+                                    }
+                                });
                             }
+
                         });
+                        SwingUtilities.invokeLater(() -> {
+                            progressItem.getTextArea().setText(msg);
+                        });
+
+                        System.out.print(msg);
                     } catch (InterruptedException e1) {
+                        
                         e1.printStackTrace();
+                    } finally {
+                        System.out.println("Finally: Main: " + mainProgressBar.getValue() + " / " + mainProgressBar.getMaximum());
                     }
                 });
+
+                c.addActionListener(e2 -> {
+                    buttonPanel.remove(c);
+                    buttonPanel.add(r);
+                    buttonPanel.revalidate();
+                    progressItem.getTextArea().setText("[CANCELED]");
+
+                  
+                    f.cancel(true);
+
+                    
+                    if (f.isCancelled()) {
+                        SwingUtilities.invokeLater(() -> {
+                            JProgressBar bar = progressItem.getProgressBar();
+                            int remaining = 1_000_000 - bar.getValue();
+                            updateMainProgressBar(remaining);
+                            bar.setValue(1_000_000);
+                        });
+                    }
+                });
+
+                
             });
         });
         
@@ -162,6 +195,8 @@ public class CodeBreaker implements SnifferCallback {
             mainProgressBar.setValue(Math.min(newValue, mainProgressBar.getMaximum()));
         });
     }
+
+    
 
 }
 
