@@ -120,7 +120,7 @@ public class CodeBreaker implements SnifferCallback {
                     
                     progressList.revalidate();
                     progressList.repaint();
-                    System.out.println("Remove 2: Main: " + mainProgressBar.getValue() + " / " + mainProgressBar.getMaximum());
+            
                 });
 
                 

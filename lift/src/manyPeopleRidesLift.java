@@ -5,8 +5,8 @@ import lift.Passenger;
 public class manyPeopleRidesLift {
     public static void main(String[] args) {
 
-        final int NBR_FLOORS = 7, MAX_PASSENGERS = 4;
-        int amount = 10;
+        final int NBR_FLOORS = 7, MAX_PASSENGERS = 1;
+        int amount = 1;
 
         LiftView  view = new LiftView(NBR_FLOORS, MAX_PASSENGERS);
 

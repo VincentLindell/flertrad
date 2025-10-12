@@ -1,4 +1,5 @@
 
+import java.util.Arrays;
 import java.util.Queue;
 
 import lift.LiftView;
@@ -14,6 +15,7 @@ public class LiftMonitor {
     int[] toEnter;
     int[] toExit;
     private Queue<Passenger>[] waitingQueues;
+    int[] emptySpots;
 
     int MAX_PASSENGERS;
     int currentlyEntering = 0;
@@ -28,13 +30,20 @@ public class LiftMonitor {
             for (int i = 0; i < NBR_FLOORS; i++) {
                 waitingQueues[i] = new java.util.LinkedList<Passenger>();
             }
+            this.emptySpots = new int[NBR_FLOORS];
+            for (int i = 0; i < NBR_FLOORS; i++) {
+                this.emptySpots[i] = 0;
+            }
         }
 
         
 
         public void startMoving(int fromFloor, int toFloor) {
+            
+
+            
             synchronized (this) {
-                while (doorsOpen || liftMoving) {
+                while (doorsOpen || liftMoving || (Arrays.equals(toEnter, emptySpots) && Arrays.equals(toExit, emptySpots))) {
                     try { wait(); } catch (InterruptedException e) { }
                 }
                 liftMoving = true;
@@ -43,29 +52,27 @@ public class LiftMonitor {
             }
 
             
-            view.moveLift(fromFloor, toFloor);
+                view.moveLift(fromFloor, toFloor);
+            
+            
 
             synchronized (this) {
                 liftMoving = false;
                 currentFloor = toFloor;
                 notifyAll();
             }
-        }
-
-
-        public synchronized void doneMoving() {
-            liftMoving = false;
-            notifyAll(); 
+        
+        
         }
 
 
         public synchronized void closeDoors(int cf) {
             if (!doorsOpen) return;
 
-          
+            System.out.println("closeDoors(" + currentFloor + ")");
             while (currentlyEntering > 0 || currentlyExiting > 0 ||
                 (toEnter[currentFloor] > 0 && passengersInLift < MAX_PASSENGERS) || toExit[currentFloor] > 0) {
-
+                System.out.println(currentlyEntering + " " + currentlyExiting + " " + toEnter[currentFloor] + " " + toExit[currentFloor]);
                 if (cf != currentFloor) return; 
                 try { wait(); } catch (InterruptedException e) {}
             }
@@ -87,28 +94,6 @@ public class LiftMonitor {
             
         }
 
-        public synchronized void enterLift(int fromFloor, int toFloor) {  
-            currentlyEntering++;
-            
-            notifyAll(); 
-
-                 
-        }
-
-        
-
-        public synchronized void exitLift(int fromFloor, int toFloor) {
-
-            while (!doorsOpen || liftMoving || currentFloor != toFloor) {
-                try { wait(); } catch (InterruptedException e) {}
-            }
-            currentlyExiting++;
-            
-            notifyAll();
-        }
-
-        
-
         public synchronized void hasEntered() {
             currentlyEntering--;
             if(currentlyEntering <= 0 && currentlyExiting <= 0) {
@@ -122,7 +107,10 @@ public class LiftMonitor {
         public synchronized void hasExited(){
             currentlyExiting--;
             if(currentlyEntering <= 0 && currentlyExiting <= 0) {
+                System.out.println("Closing doors at floor " + currentFloor);
                 closeDoors(currentFloor);
+            } else {
+                System.out.println("Not closing doors at floor " + currentFloor + " because currentlyEntering = " + currentlyEntering + " and currentlyExiting = " + currentlyExiting);
             }
             
             notifyAll();
@@ -184,31 +172,31 @@ public class LiftMonitor {
             waitingQueues[p.getStartFloor()].add(p);
         }
 
-        public synchronized void performEnterLift(int from, int to, Passenger p) {
-            while (!doorsOpen || liftMoving || passengersInLift >= MAX_PASSENGERS
-                || currentFloor != from || waitingQueues[from].peek() != p) {
-                try { wait(); } catch (InterruptedException e) {}
+
+        public void exit(int from, int to, Passenger p){
+            synchronized(this)  {
+                waitUntilSafeToExit(to); 
+                currentlyExiting++;
             }
-
-            waitingQueues[from].poll();
-            toEnter[from]--;
-            toExit[to]++;
-            passengersInLift++;
-            notifyAll();    
-        }
-
-        public synchronized void exit(int from, int to, Passenger p){
-            waitUntilSafeToExit(to);
-            exitLift(from, to);
             p.exitLift();
-            hasExited();
+            System.out.println("Passenger exited at floor " + to);
+
+            synchronized(this)  {
+                hasExited();
+            }
         }
 
-        public synchronized void enter(int from, int to, Passenger p){
-            waitUntilSafeToEnter(from, to, p); 
-            enterLift(from, to); 
+        public  void enter(int from, int to, Passenger p){
+            synchronized(this)  {
+                waitUntilSafeToEnter(from, to, p); 
+                currentlyEntering++;
+            }
             p.enterLift();
-            hasEntered();
+
+            synchronized(this)  {
+                hasEntered();
+            }
+            
         }
     
         
