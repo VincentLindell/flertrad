@@ -19,13 +19,29 @@ public class Wash {
         water.start();
         spin.start();
 
+      
+        ActorThread<WashingMessage> wp = null;
+        
+
         while (true) {
             int n = io.awaitButton();
             System.out.println("user selected program " + n);
+            
 
-            // TODO:
-            // if the user presses buttons 1-3, start a washing program
-            // if the user presses button 0, and a program has been started, stop it
+            if(n == 0 && wp != null) {
+                wp.interrupt();
+            } else if(n == 1 && wp == null){
+                wp = new WashingProgram1(io, temp, water, spin);
+                wp.start();
+            } else if(n == 2 && wp == null){
+                wp = new WashingProgram2(io, temp, water, spin);
+                wp.start();
+            } else if(n == 3 && wp == null){
+                wp = new WashingProgram3(io, temp, water, spin);
+                wp.start();
+            }
+
+
         }
     }
-};
+}
