@@ -39,47 +39,59 @@ public class WashingProgram1 extends ActorThread<WashingMessage> {
             io.lock(true);
 
             water.send(new WashingMessage(this, WATER_FILL));
-            WashingMessage ack0 = receive();
-            System.out.println("washing program 1 got " + ack0);
+            System.out.println("washing program 1 got " + receive());
+            //System.out.println("washing program 1 got " + receive());
             
             temp.send(new WashingMessage(this, TEMP_SET_40));
-            WashingMessage ackTemp = receive();
-             System.out.println("washing program 1 got " + ackTemp);
-          
+            System.out.println("washing program 1 got " + receive());
 
             for(int i = 0; i < 30; i++){
+                System.out.println(io.getWaterLevel());
                 spin.send(new WashingMessage(this, SPIN_SLOW));
-                WashingMessage ack1 = receive();
-                System.out.println("washing program 1 got " + ack1);
+                
+                System.out.println("washing program 1 got " + receive());
                 Thread.sleep(1 * 60000 / Settings.SPEEDUP);
+       
             }
-            
+            System.out.println("main wash done");
+ 
             temp.send(new WashingMessage(this, TEMP_IDLE));
-            WashingMessage ackTempIdle = receive();
-            System.out.println("washing program 1 got " + ackTempIdle);
+            System.out.println("washing program 1 got " + receive());
 
             spin.send(new WashingMessage(this, SPIN_OFF));
-            WashingMessage ack2 = receive();
-            System.out.println("washing program 1 got " + ack2);
+            System.out.println("washing program 1 got " + receive());
 
 
             water.send(new WashingMessage(this, WATER_DRAIN)); 
-            WashingMessage ackDrain = receive();
-            System.out.println("washing program 1 got " + ackDrain);
+            System.out.println("washing program 1 got " + receive());
+            //System.out.println("washing program 1 got " + receive());
 
             for(int i = 0; i < 5; i++){
-                water.send(new WashingMessage(this, WATER_FILL)); receive();
-                spin.send(new WashingMessage(this, SPIN_SLOW)); receive();
+                System.out.println(io.getWaterLevel());
+                water.send(new WashingMessage(this, WATER_FILL)); 
+                System.out.println("washing program 1 got " + receive());
+                //System.out.println("washing program 1 got " + receive());
+                spin.send(new WashingMessage(this, SPIN_SLOW)); 
+                System.out.println("washing program 1 got " + receive());
 
                 Thread.sleep(2 * 60000 / Settings.SPEEDUP);
-                spin.send(new WashingMessage(this, SPIN_OFF)); receive();
-                water.send(new WashingMessage(this, WATER_DRAIN)); receive();
+                spin.send(new WashingMessage(this, SPIN_OFF)); 
+                System.out.println("washing program 1 got " + receive());
+                water.send(new WashingMessage(this, WATER_DRAIN)); 
+                System.out.println("washing program 1 got " + receive());
+                //System.out.println("washing program 1 got " + receive());
             }
 
-            spin.send(new WashingMessage(this, SPIN_FAST)); receive();
+            io.drain(true);
+            spin.send(new WashingMessage(this, SPIN_FAST)); 
+            System.out.println("washing program 1 got " + receive());
             Thread.sleep(5 * 60000 / Settings.SPEEDUP);
-
+            spin.send(new WashingMessage(this, SPIN_OFF)); 
+            System.out.println("washing program 1 got " + receive());
+            io.drain(false);
             io.lock(false);
+            this.interrupt();
+            
 
         } catch (InterruptedException e) {
             System.out.println("Washing program 1 interrupted");

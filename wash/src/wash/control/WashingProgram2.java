@@ -35,24 +35,81 @@ public class WashingProgram2 extends ActorThread<WashingMessage> {
     @Override
     public void run() {
         try {
-            // Lock the hatch
-            io.lock(true);
-            // Instruct SpinController to rotate barrel slowly, back and forth
-            // Expect an acknowledgment in response.
-            System.out.println("setting SPIN_SLOW...");
-            spin.send(new WashingMessage(this, SPIN_SLOW));
-            WashingMessage ack1 = receive();
-            System.out.println("washing program 1 got " + ack1);
-            // Spin for five simulated minutes (one minute == 60000 milliseconds)
-            Thread.sleep(5 * 60000 / Settings.SPEEDUP);
-            // Instruct SpinController to stop spin barrel spin.
-            // Expect an acknowledgment in response.
-            System.out.println("setting SPIN_OFF...");
+           io.lock(true);
+
+            water.send(new WashingMessage(this, WATER_FILL));
+            WashingMessage ack0 = receive();
+            System.out.println("washing program 1 got " + ack0);
+            
+            temp.send(new WashingMessage(this, TEMP_SET_40));
+            WashingMessage ackTemp = receive();
+             System.out.println("washing program 1 got " + ackTemp);
+          
+
+            for(int i = 0; i < 20; i++){
+                spin.send(new WashingMessage(this, SPIN_SLOW));
+                WashingMessage ack1 = receive();
+                System.out.println("washing program 1 got " + ack1);
+                Thread.sleep(1 * 60000 / Settings.SPEEDUP);
+            }
+            
+           
+            temp.send(new WashingMessage(this, TEMP_IDLE));
+            WashingMessage ackTempIdle = receive();
+            System.out.println("washing program 1 got " + ackTempIdle);
+
             spin.send(new WashingMessage(this, SPIN_OFF));
             WashingMessage ack2 = receive();
             System.out.println("washing program 1 got " + ack2);
-            // Now that the barrel has stopped, it is safe to open the hatch.
+
+            water.send(new WashingMessage(this, WATER_DRAIN)); 
+            WashingMessage ackDrain = receive();
+            System.out.println("washing program 1 got " + ackDrain);
+
+            water.send(new WashingMessage(this, WATER_FILL));
+            WashingMessage ack = receive();
+            System.out.println("washing program 1 got " + ack);
+            
+            temp.send(new WashingMessage(this, TEMP_SET_60));
+            WashingMessage ackTemp2 = receive();
+             System.out.println("washing program 1 got " + ackTemp2);
+
+            for(int i = 0; i < 30; i++){
+                spin.send(new WashingMessage(this, SPIN_SLOW));
+                WashingMessage ack1 = receive();
+                System.out.println("washing program 1 got " + ack1);
+                Thread.sleep(1 * 60000 / Settings.SPEEDUP);
+            }
+
+            temp.send(new WashingMessage(this, TEMP_IDLE));
+            WashingMessage ackTempIdle2 = receive();
+            System.out.println("washing program 1 got " + ackTempIdle2);
+
+            spin.send(new WashingMessage(this, SPIN_OFF));
+            WashingMessage ack5 = receive();
+            System.out.println("washing program 1 got " + ack5);
+
+
+            water.send(new WashingMessage(this, WATER_DRAIN)); 
+            WashingMessage ackDrain2 = receive();
+            System.out.println("washing program 1 got " + ackDrain);
+
+            for(int i = 0; i < 5; i++){
+                water.send(new WashingMessage(this, WATER_FILL)); receive();
+                spin.send(new WashingMessage(this, SPIN_SLOW)); receive();
+
+                Thread.sleep(2 * 60000 / Settings.SPEEDUP);
+                spin.send(new WashingMessage(this, SPIN_OFF)); receive();
+                water.send(new WashingMessage(this, WATER_DRAIN)); receive();
+            }
+
+            io.drain(true);
+            spin.send(new WashingMessage(this, SPIN_FAST)); receive(); 
+            Thread.sleep(5 * 60000 / Settings.SPEEDUP);
+            spin.send(new WashingMessage(this, SPIN_OFF)); receive();
+            io.drain(false);
             io.lock(false);
+            this.interrupt();
 
         } catch (InterruptedException unexpected) {
             // we don't expect this thread to be interrupted,

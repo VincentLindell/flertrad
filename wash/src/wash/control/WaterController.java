@@ -20,7 +20,8 @@ public class WaterController extends ActorThread<WashingMessage> {
     public void run() {
         try {
             while(true){
-                WashingMessage m = receiveWithTimeout(60000 / Settings.SPEEDUP);
+                int dt = 1000 / Settings.SPEEDUP;
+                WashingMessage m = receiveWithTimeout(dt);
                 
                 if(m != null){
                    
@@ -29,7 +30,7 @@ public class WaterController extends ActorThread<WashingMessage> {
 
                     switch (m.order()) {
                         case WATER_FILL:
-                            preferredLevel = 10;
+                            preferredLevel = 8;
                             action = "filling";
                             io.fill(true);
                             io.drain(false);
@@ -53,17 +54,14 @@ public class WaterController extends ActorThread<WashingMessage> {
                     }
                 } else{
                     
-                    if(action.equals("filling")){
-                        if(io.getWaterLevel() >= preferredLevel){
-                            
-                            this.send(new WashingMessage(this, WashingMessage.Order.WATER_IDLE));
-                            
-                        }
-                    } else if (action.equals("draining")){
-                        if(io.getWaterLevel() <= preferredLevel){
-                            this.send(new WashingMessage(this, WashingMessage.Order.WATER_IDLE));
-                        }
+                    if ((action.equals("filling") && io.getWaterLevel() >= preferredLevel)
+                        || (action.equals("draining") && io.getWaterLevel() <= 0)) {
+                        io.fill(false);
+                        io.drain(false);
+                        origin.send(new WashingMessage(this, WashingMessage.Order.ACKNOWLEDGMENT));
+                        action = "idle"; // ändra bara till idle lokalt
                     }
+
                     
                 }
             }

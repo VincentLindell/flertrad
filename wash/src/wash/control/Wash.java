@@ -26,22 +26,36 @@ public class Wash {
         while (true) {
             int n = io.awaitButton();
             System.out.println("user selected program " + n);
-            
 
-            if(n == 0 && wp != null) {
-                wp.interrupt();
-            } else if(n == 1 && wp == null){
-                wp = new WashingProgram1(io, temp, water, spin);
-                wp.start();
-            } else if(n == 2 && wp == null){
-                wp = new WashingProgram2(io, temp, water, spin);
-                wp.start();
-            } else if(n == 3 && wp == null){
-                wp = new WashingProgram3(io, temp, water, spin);
-                wp.start();
+            // Om ett program har avslutats naturligt, nollställ referensen
+            if (wp != null && !wp.isAlive()) {
+                wp = null;
             }
 
+            if (n == 0 && wp != null) {
+                System.out.println("STOP pressed – interrupting current program");
+                wp.interrupt();
+                wp = null;
 
+            } else if (n == 1 && wp == null) {
+                wp = new WashingProgram1(io, temp, water, spin);
+                wp.start();
+
+            } else if (n == 2 && wp == null) {
+                wp = new WashingProgram2(io, temp, water, spin);
+                wp.start();
+
+            } else if (n == 3 && wp == null) {
+                wp = new WashingProgram3(io, temp, water, spin);
+                wp.start();
+
+            } else if (wp != null) {
+                System.out.println("A program is already running, press 0 to stop it first!");
+            }
         }
+
     }
 }
+
+    
+
