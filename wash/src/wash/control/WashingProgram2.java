@@ -114,6 +114,9 @@ public class WashingProgram2 extends ActorThread<WashingMessage> {
         } catch (InterruptedException unexpected) {
             // we don't expect this thread to be interrupted,
             // so throw an error if it happens anyway
+            temp.send(new WashingMessage(this, TEMP_IDLE));
+            water.send(new WashingMessage(this, WATER_IDLE));
+            spin.send(new WashingMessage(this, SPIN_OFF));
             throw new Error(unexpected);
         }
     }

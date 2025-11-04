@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <pthread.h>
 
 //
 //  intset:
@@ -6,7 +7,12 @@
 //  Functions for creating and using sets of integers.
 //
 
-struct intset;
+struct intset {
+    int size;
+    int allocated;
+    int *data;
+    pthread_mutex_t lock;   // 🔒 Mutex för trådsäkerhet
+};
 
 /**
  * Create a new integer set.

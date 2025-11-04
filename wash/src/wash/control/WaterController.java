@@ -55,11 +55,11 @@ public class WaterController extends ActorThread<WashingMessage> {
                 } else{
                     
                     if ((action.equals("filling") && io.getWaterLevel() >= preferredLevel)
-                        || (action.equals("draining") && io.getWaterLevel() <= 0)) {
+                        || (action.equals("draining") && io.getWaterLevel() <= 0.2)) {
                         io.fill(false);
                         io.drain(false);
                         origin.send(new WashingMessage(this, WashingMessage.Order.ACKNOWLEDGMENT));
-                        action = "idle"; // ändra bara till idle lokalt
+                        action = "idle";
                     }
 
                     

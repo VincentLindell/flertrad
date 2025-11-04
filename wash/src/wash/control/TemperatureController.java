@@ -11,10 +11,10 @@ public class TemperatureController extends ActorThread<WashingMessage> {
     private int targetTemp = 0;
     private ActorThread<WashingMessage> sender = null;
 
-    private static final int dt = 10 * 1000 / Settings.SPEEDUP; // 10 s period
-    // finjusteringar
-private final double mu = 0.9;  // stäng av lite senare
-private final double ml = 0.25; // slå på lite tidigare
+    private static final int dt = 1000 / Settings.SPEEDUP; 
+    
+private final double mu = 0.9;  
+private final double ml = 0.25; 
 
 
     public TemperatureController(WashingIO io) {
@@ -50,26 +50,26 @@ private final double ml = 0.25; // slå på lite tidigare
                     }
                 }
 
-                if (targetTemp > 0 && io.getWaterLevel() > 0) { // SR1: heat only if water present
+                if (targetTemp > 0 && io.getWaterLevel() > 0) { 
                     double T = io.getTemperature();
                     double lowerBound = targetTemp - 2;
                     double upperBound = targetTemp;
 
-                    // Heat ON: only if we are below safe lower margin
+                    
                     if (!heating && T <= (lowerBound - ml+0.5 )) {
                         io.heat(true);
                         heating = true;
                         
                     }
 
-                    // Heat OFF: early enough to avoid overshoot
+                   
                     else if (heating && T >= (upperBound - mu)) {
                         io.heat(false);
                         heating = false;
                         
                     }
 
-                    // Send ACK once when first reaching the valid range
+                    
                     if (sender != null && T >= lowerBound && T < upperBound) {
                         sender.send(new WashingMessage(this, WashingMessage.Order.ACKNOWLEDGMENT));
                         sender = null;

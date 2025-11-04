@@ -82,7 +82,7 @@ public class WashingProgram1 extends ActorThread<WashingMessage> {
                 //System.out.println("washing program 1 got " + receive());
             }
 
-            io.drain(true);
+            
             spin.send(new WashingMessage(this, SPIN_FAST)); 
             System.out.println("washing program 1 got " + receive());
             Thread.sleep(5 * 60000 / Settings.SPEEDUP);
@@ -94,6 +94,9 @@ public class WashingProgram1 extends ActorThread<WashingMessage> {
             
 
         } catch (InterruptedException e) {
+            temp.send(new WashingMessage(this, TEMP_IDLE));
+            water.send(new WashingMessage(this, WATER_IDLE));
+            spin.send(new WashingMessage(this, SPIN_OFF));
             System.out.println("Washing program 1 interrupted");
         }
     }

@@ -23,10 +23,10 @@ public class SpinController extends ActorThread<WashingMessage> {
 
 
             while (true) {
-                // wait for up to a (simulated) minute for a WashingMessage
+            
                 WashingMessage m = receiveWithTimeout(60000 / Settings.SPEEDUP);
 
-                // if m is null, it means a minute passed and no message was received
+               
                 if (m != null) {
                     System.out.println("SpinningController: got " + m);
 
@@ -45,6 +45,7 @@ public class SpinController extends ActorThread<WashingMessage> {
                             m.sender().send(new WashingMessage(this, WashingMessage.Order.ACKNOWLEDGMENT));
                             break;
                         case SPIN_FAST:
+                            io.drain(true);
                             io.setSpinMode(Spin.FAST);
                             m.sender().send(new WashingMessage(this, WashingMessage.Order.ACKNOWLEDGMENT)); 
                             break;
